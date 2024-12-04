@@ -10,7 +10,7 @@ A simple Streamlit app showing the GDP of different countries in the world.
 
    ```
    $ pip install -r requirements.txt
-   $ python -m pip install prophet
+   
    ```
 
 2. Run the app
@@ -18,3 +18,4 @@ A simple Streamlit app showing the GDP of different countries in the world.
    ```
    $ streamlit run streamlit_app.py
    ```
+   $ python -m pip install prophet
