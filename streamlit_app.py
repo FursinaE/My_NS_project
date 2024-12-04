@@ -25,24 +25,6 @@ def get_gdp_data():
     DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
     raw_gdp_df = pd.read_csv('df_streamlit.csv')
 
-    #MIN_YEAR = 1960
-    #MAX_YEAR = 2022
-
-    # The data above has columns like:
-    # - Country Name
-    # - Country Code
-    # - [Stuff I don't care about]
-    # - GDP for 1960
-    # - GDP for 1961
-    # - GDP for 1962
-    # - ...
-    # - GDP for 2022
-    #
-    # ...but I want this instead:
-    # - Country Name
-    # - Country Code
-    # - Year
-    # - GDP
     #
     # So let's pivot all those year-columns into two: Year and GDP
     gdp_df = raw_gdp_df.rename(columns = {"rdt_id" : "nb_disruptions"})
@@ -69,7 +51,6 @@ Using NS data we try to predict number of disruptions which might potencially ha
 
 # Add some spacing
 ''
-''
 calender_2024 = pd.read_csv('Calender_2024.csv')
 
 calender_2024['date_date'] = pd.to_datetime(calender_2024['date_date'])
@@ -88,7 +69,7 @@ st.write('Selected date is:', d)
 
 
 
-provinces = gdp_df['NUTS_1_0'].unique()
+provinces = gdp_df['NUTS_2_0'].unique()
 
 if not len(provinces):
     st.warning("Select at least one province!")
@@ -96,14 +77,15 @@ if not len(provinces):
 selected_province = st.multiselect(
     'Which province would you like to check?',
     provinces,
-    ['Zuid-Nederland', 'West-Nederland', 'Oost-Nederland',
-       'Noord-Nederland'])
+    ['Noord-Brabant', 'Utrecht', 'Gelderland', 'Groningen',
+       'Limburg (NL)', 'Drenthe', 'Overijssel', 'Friesland (NL)',
+       'Noord-Holland', 'Zuid-Holland', 'Zeeland', 'Flevoland'])
 
 ''
 
 # Filter the data
 filtered_gdp_df = gdp_df[
-    (gdp_df['NUTS_1_0'].isin(selected_province))
+    (gdp_df['NUTS_2_0'].isin(selected_province))
    # & (gdp_df['Year'] <= to_year)
     # & (from_year <= gdp_df['Year'])
 ]
@@ -121,7 +103,7 @@ from prophet import Prophet
 m = Prophet()
 m.fit(df_timeseries.rename(columns={"start_time": "ds", "nb_disruptions": "y"}))
 
-future = m.make_future_dataframe(periods=365, freq="d")
+future = m.make_future_dataframe(periods=376, freq="d")
 
 forecast = m.predict(future)
 
@@ -137,7 +119,7 @@ d = d.strftime("%Y-%m-%d")
 prediction_on_day = round(forecast["yhat"].values[forecast["ds"][forecast["ds"] == d].index][0], 2)
 
 
-sentence = f'Predicted number of disruption in {selected_province} on {d} is {prediction_on_day}'
+sentence = f'Predicted number of disruption in {selected_province[0]} on {d} is {prediction_on_day}'
 ''
 sentence
 
