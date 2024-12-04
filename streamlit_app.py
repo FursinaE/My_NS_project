@@ -90,9 +90,6 @@ filtered_gdp_df = gdp_df[
     # & (from_year <= gdp_df['Year'])
 ]
 
-st.header('Prediction', divider='gray')
-
-
 filtered_gdp_df["start_time"] = pd.DatetimeIndex(filtered_gdp_df["start_time"])
 
 df_timeseries = filtered_gdp_df.resample("D", on = "start_time").agg({"nb_disruptions" : "nunique"}).reset_index()
@@ -110,7 +107,7 @@ forecast = m.predict(future)
 fig1 = m.plot(forecast)
 
 
-st.write(fig1)
+
 
 
 d = pd.to_datetime(d)
@@ -119,8 +116,10 @@ d = d.strftime("%Y-%m-%d")
 prediction_on_day = round(forecast["yhat"].values[forecast["ds"][forecast["ds"] == d].index][0], 2)
 
 
-sentence = f'Predicted number of disruption in {selected_province[0]} on {d} is {prediction_on_day}'
+sentence = f'Predicted number of disruptions in {", ".join(selected_province)} on {d} is {prediction_on_day}'
 ''
-sentence
+st.header(sentence)
 
 ''
+
+st.write(fig1)
