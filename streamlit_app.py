@@ -71,8 +71,8 @@ st.write('Selected date is:', d)
 
 provinces = gdp_df['NUTS_2_0'].unique()
 
-if not len(provinces):
-    st.warning("Select at least one province!")
+#if not len(provinces):
+ #   st.warning("Select at least one province!")
 
 selected_province = st.multiselect(
     'Which province would you like to check?',
@@ -82,44 +82,47 @@ selected_province = st.multiselect(
        'Noord-Holland', 'Zuid-Holland', 'Zeeland', 'Flevoland'])
 
 ''
+if not len(selected_province):
+    st.warning("Select at least one province!")
 
-# Filter the data
-filtered_gdp_df = gdp_df[
-    (gdp_df['NUTS_2_0'].isin(selected_province))
-   # & (gdp_df['Year'] <= to_year)
-    # & (from_year <= gdp_df['Year'])
-]
+else:
+    # Filter the data
+    filtered_gdp_df = gdp_df[
+        (gdp_df['NUTS_2_0'].isin(selected_province))
+    # & (gdp_df['Year'] <= to_year)
+        # & (from_year <= gdp_df['Year'])
+    ]
 
-filtered_gdp_df["start_time"] = pd.DatetimeIndex(filtered_gdp_df["start_time"])
+    filtered_gdp_df["start_time"] = pd.DatetimeIndex(filtered_gdp_df["start_time"])
 
-df_timeseries = filtered_gdp_df.resample("D", on = "start_time").agg({"nb_disruptions" : "nunique"}).reset_index()
-
-
-from prophet import Prophet
-
-m = Prophet()
-m.fit(df_timeseries.rename(columns={"start_time": "ds", "nb_disruptions": "y"}))
-
-future = m.make_future_dataframe(periods=376, freq="d")
-
-forecast = m.predict(future)
-
-fig1 = m.plot(forecast)
+    df_timeseries = filtered_gdp_df.resample("D", on = "start_time").agg({"nb_disruptions" : "nunique"}).reset_index()
 
 
+    from prophet import Prophet
+
+    m = Prophet()
+    m.fit(df_timeseries.rename(columns={"start_time": "ds", "nb_disruptions": "y"}))
+
+    future = m.make_future_dataframe(periods=376, freq="d")
+
+    forecast = m.predict(future)
+
+    fig1 = m.plot(forecast)
 
 
 
-d = pd.to_datetime(d)
-d = d.strftime("%Y-%m-%d")
-
-prediction_on_day = round(forecast["yhat"].values[forecast["ds"][forecast["ds"] == d].index][0], 2)
 
 
-sentence = f'Predicted number of disruptions in {", ".join(selected_province)} on {d} is {prediction_on_day}'
-''
-st.header(sentence)
+    d = pd.to_datetime(d)
+    d = d.strftime("%Y-%m-%d")
 
-''
+    prediction_on_day = round(forecast["yhat"].values[forecast["ds"][forecast["ds"] == d].index][0], 2)
 
-st.write(fig1)
+
+    sentence = f'Predicted number of disruptions in {", ".join(selected_province)} on {d} is {prediction_on_day}'
+    ''
+    st.header(sentence)
+
+    ''
+
+    st.write(fig1)
