@@ -47,9 +47,6 @@ gdp_df = get_gdp_data()
 '''
 # :train: Prediction of number of disruptions by NS
 
-Using NS data we try to predict number of disruptions which might potencially occur on particular day on particular station
-
-
 '''
 
 # Add some spacing
@@ -71,13 +68,13 @@ d = st.date_input(
 st.write('Selected date is:', d)
 
 
-provinces = gdp_df['NUTS_2_0'].unique()
+provinces = np.sort(gdp_df['NUTS_2_0'].unique())
 
 
 selected_province = st.multiselect(
     'Which province would you like to check?',
     provinces)
-    #['Noord-Brabant', 'Utrecht', 'Gelderland', 'Groningen',
+    #, ['Noord-Brabant', 'Utrecht', 'Gelderland', 'Groningen',
      #  'Limburg (NL)', 'Drenthe', 'Overijssel', 'Friesland (NL)',
       # 'Noord-Holland', 'Zuid-Holland', 'Zeeland', 'Flevoland'])
 
@@ -93,6 +90,8 @@ selected_stations = st.multiselect(
     'Which station are you intrested in?',
     stations)
 
+filtered_gdp_df_station = filtered_gdp_df[
+        (filtered_gdp_df['name_long'].isin(selected_stations))]
 ''
 if not len(selected_stations):
     st.warning("Please select a station!")
@@ -105,9 +104,9 @@ else:
         # & (from_year <= gdp_df['Year'])
     # ]
 
-    filtered_gdp_df["start_time"] = pd.DatetimeIndex(filtered_gdp_df["start_time"])
+    filtered_gdp_df_station["start_time"] = pd.DatetimeIndex(filtered_gdp_df_station["start_time"])
 
-    df_timeseries = filtered_gdp_df.resample("D", on = "start_time").agg({"nb_disruptions" : "nunique"}).reset_index()
+    df_timeseries = filtered_gdp_df_station.resample("D", on = "start_time").agg({"nb_disruptions" : "nunique"}).reset_index()
 
 
     from prophet import Prophet
