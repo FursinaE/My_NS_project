@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import math
 from pathlib import Path
+import numpy as np
 
 # Set the title and favicon that appear in the Browser's tab bar.
 st.set_page_config(
@@ -23,7 +24,7 @@ def get_gdp_data():
 
     # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
     DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
-    raw_gdp_df = pd.read_csv('df_streamlit.csv')
+    raw_gdp_df = pd.read_csv('df_streamlit_updated.csv')
 
     #
     # So let's pivot all those year-columns into two: Year and GDP
@@ -46,7 +47,9 @@ gdp_df = get_gdp_data()
 '''
 # :train: Prediction of number of disruptions by NS
 
-Using NS data we try to predict number of disruptions which might potencially happen on particular day in particular NL region
+Using NS data we try to predict number of disruptions which might potencially occur on particular day on particular station
+
+
 '''
 
 # Add some spacing
@@ -68,30 +71,39 @@ d = st.date_input(
 st.write('Selected date is:', d)
 
 
-
 provinces = gdp_df['NUTS_2_0'].unique()
 
-#if not len(provinces):
- #   st.warning("Select at least one province!")
 
 selected_province = st.multiselect(
     'Which province would you like to check?',
-    provinces,
-    ['Noord-Brabant', 'Utrecht', 'Gelderland', 'Groningen',
-       'Limburg (NL)', 'Drenthe', 'Overijssel', 'Friesland (NL)',
-       'Noord-Holland', 'Zuid-Holland', 'Zeeland', 'Flevoland'])
+    provinces)
+    #['Noord-Brabant', 'Utrecht', 'Gelderland', 'Groningen',
+     #  'Limburg (NL)', 'Drenthe', 'Overijssel', 'Friesland (NL)',
+      # 'Noord-Holland', 'Zuid-Holland', 'Zeeland', 'Flevoland'])
+
+if not len(selected_province):
+    st.warning("Please select a province!")
+
+filtered_gdp_df = gdp_df[
+        (gdp_df['NUTS_2_0'].isin(selected_province))]
+
+stations = np.sort(filtered_gdp_df["name_long"].unique())
+
+selected_stations = st.multiselect(
+    'Which station are you intrested in?',
+    stations)
 
 ''
-if not len(selected_province):
-    st.warning("Select at least one province!")
+if not len(selected_stations):
+    st.warning("Please select a station!")
 
 else:
     # Filter the data
-    filtered_gdp_df = gdp_df[
-        (gdp_df['NUTS_2_0'].isin(selected_province))
+    #filtered_gdp_df = gdp_df[
+     #   (gdp_df['NUTS_2_0'].isin(selected_province))
     # & (gdp_df['Year'] <= to_year)
         # & (from_year <= gdp_df['Year'])
-    ]
+    # ]
 
     filtered_gdp_df["start_time"] = pd.DatetimeIndex(filtered_gdp_df["start_time"])
 
@@ -110,19 +122,14 @@ else:
     fig1 = m.plot(forecast)
 
 
-
-
-
     d = pd.to_datetime(d)
     d = d.strftime("%Y-%m-%d")
 
     prediction_on_day = round(forecast["yhat"].values[forecast["ds"][forecast["ds"] == d].index][0], 2)
 
 
-    sentence = f'Predicted number of disruptions in {", ".join(selected_province)} on {d} is {prediction_on_day}'
+    sentence = f'Predicted number of disruptions in {", ".join(selected_stations)} on {d} is {prediction_on_day}'
     ''
     st.header(sentence)
 
     ''
-
-    st.write(fig1)
